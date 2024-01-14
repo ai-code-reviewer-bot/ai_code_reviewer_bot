@@ -50,6 +50,7 @@ def webhook():
         if payload['action'] == 'created' and 'comment' in payload:
             print("webhook post comment created triggered")
             comment_text = payload['comment']['body']
+            print("comment_text ", comment_text)
             if '@ai-code-reviewer-bot' in comment_text:
                 print("webhook post comment created mention triggered")
                 repo_name = payload['repository']['full_name']
