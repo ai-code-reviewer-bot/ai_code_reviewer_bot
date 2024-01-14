@@ -7,6 +7,7 @@ from github import Github
 
 app = Flask(__name__)
 
+
 def create_jwt(app_id, private_key_path):
     """
     Create a JWT (JSON Web Token) using the given app ID and private key file.
@@ -17,13 +18,14 @@ def create_jwt(app_id, private_key_path):
 
     # Generate the JWT
     payload = {
-        'iat': int(time.time()),              # Issued at time
-        'exp': int(time.time()) + (10 * 60), # Expiration time (10 minutes)
-        'iss': app_id                         # Issuer (GitHub App ID)
+        'iat': int(time.time()),  # Issued at time
+        'exp': int(time.time()) + (10 * 60),  # Expiration time (10 minutes)
+        'iss': app_id  # Issuer (GitHub App ID)
     }
 
     token = jwt.encode(payload, private_key, algorithm='RS256')
     return token
+
 
 def get_installation_access_token(jwt_token, installation_id):
     """
@@ -38,19 +40,25 @@ def get_installation_access_token(jwt_token, installation_id):
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()['token']
 
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    print("webhook triggered")
     if request.method == 'POST':
+        print("webhook post triggered")
         payload = request.json
         if payload['action'] == 'created' and 'comment' in payload:
+            print("webhook post comment created triggered")
             comment_text = payload['comment']['body']
             if '@ai-code-reviewer-bot' in comment_text:
+                print("webhook post comment created mention triggered")
                 repo_name = payload['repository']['full_name']
                 issue_number = payload['issue']['number']
                 repo = g.get_repo(repo_name)
                 issue = repo.get_issue(number=issue_number)
                 issue.create_comment("Did you call me?")
         return jsonify({'status': 'success'}), 200
+
 
 if __name__ == '__main__':
     # Retrieve GitHub App credentials from environment variables
@@ -65,4 +73,5 @@ if __name__ == '__main__':
     # Initialize the GitHub client with the access token
     g = Github(access_token)
 
+    print("running")
     app.run(host='0.0.0.0', port=5000)
