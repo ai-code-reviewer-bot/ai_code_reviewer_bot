@@ -12,7 +12,7 @@ from auth import get_github_access_token
 app = Flask(__name__)
 
 
-class App(BaseModel):
+class GithubBotApp(BaseModel):
     github_handler: GithubEventHandler
     port: int
     debug_mode: bool
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    App(
+    GithubBotApp(
         github_handler=GithubEventHandler(
             github=Github(
                 get_github_access_token(
