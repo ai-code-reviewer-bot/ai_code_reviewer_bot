@@ -45,20 +45,40 @@ def get_installation_access_token(jwt_token, installation_id):
 def webhook():
     print("webhook triggered")
     if request.method == 'POST':
-        print("webhook post triggered")
         payload = request.json
-        if payload['action'] == 'created' and 'comment' in payload:
-            print("webhook post comment created triggered")
-            comment_text = payload['comment']['body']
-            print("comment_text ", comment_text)
-            if '@ai-code-reviewer-bot' in comment_text:
-                print("webhook post comment created mention triggered")
-                repo_name = payload['repository']['full_name']
-                issue_number = payload['issue']['number']
-                repo = g.get_repo(repo_name)
-                issue = repo.get_issue(number=issue_number)
-                issue.create_comment("Did you call me?")
+        event = request.headers.get('X-GitHub-Event', None)
+
+        if event == 'pull_request':
+            handle_pull_request_event(payload)
+        elif event == 'issue_comment':
+            handle_issue_comment_event(payload)
+
         return jsonify({'status': 'success'}), 200
+
+
+def handle_issue_comment_event(payload):
+    if payload['action'] == 'created' and 'comment' in payload:
+        comment_text = payload['comment']['body']
+        if '@ai-code-reviewer-bot' in comment_text:
+            repo_name = payload['repository']['full_name']
+            issue_number = payload['issue']['number']
+            repo = g.get_repo(repo_name)
+            issue = repo.get_issue(number=issue_number)
+            issue.create_comment("Did you call me?")
+
+
+def handle_pull_request_event(payload):
+    if payload['action'] == 'opened' or payload['action'] == 'synchronize':
+        comment_body = payload['pull_request']['body']
+        if '@ai-code-reviewer-bot' in comment_body:
+            repo_name = payload['repository']['full_name']
+            pr_number = payload['pull_request']['number']
+            repo = g.get_repo(repo_name)
+            pr = repo.get_pull(pr_number)
+            files = pr.get_files()
+
+            for file in files:
+                print(f"File: {file.filename}, Changes: {file.patch}")
 
 
 if __name__ == '__main__':
