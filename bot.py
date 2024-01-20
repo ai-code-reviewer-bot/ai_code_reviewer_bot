@@ -1,4 +1,5 @@
 import argparse
+import logging
 from typing import Any
 
 from flask import Flask, request, jsonify
@@ -46,6 +47,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     flask_app = Flask(__name__)
+    logger = flask_app.logger
+    logger.setLevel(logging.DEBUG if args.debug_mode else logging.INFO)
     github = Github(
         get_github_access_token(
             app_id=args.app_id,
@@ -55,7 +58,7 @@ if __name__ == '__main__':
     )
     github_event_handler = GithubEventHandler(
         github=github,
-        logger=flask_app.logger
+        logger=logger
     )
 
     github_bot_app = GithubBotApp(
