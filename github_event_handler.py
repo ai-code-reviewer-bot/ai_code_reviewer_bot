@@ -9,6 +9,9 @@ class GithubEventHandler(BaseModel):
     github: Github
     logger: Logger
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def handle_event(self, event: str, payload: Dict):
         self.logger.debug("Event")
         if event == 'issue_comment':
