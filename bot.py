@@ -24,7 +24,7 @@ class GithubBotApp(BaseModel):
 
     def register_webhook(self):
         print("Registering webhook")
-        self.flask_app.add_url_rule('/webhook', view_func=self.webhook, methods=['POST'])
+        self.flask_app.add_url_rule('/webhook', view_func=self.webhook)
 
     def webhook(self):
         print("webhook triggered")
@@ -33,6 +33,7 @@ class GithubBotApp(BaseModel):
             event = request.headers.get('X-GitHub-Event', None)
             self.github_handler.handle_event(event, payload)
             return jsonify({'status': 'success'}), 200
+        return "debug"
 
     def run(self):
         self.flask_app.run(host='0.0.0.0', port=self.port, debug=self.debug_mode)
