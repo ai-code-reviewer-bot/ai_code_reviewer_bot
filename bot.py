@@ -49,17 +49,22 @@ def webhook():
         event = request.headers.get('X-GitHub-Event', None)
 
         if event == 'pull_request':
+            print("pull request triggered")
             handle_pull_request_event(payload)
         elif event == 'issue_comment':
+            print("issue comment triggered")
             handle_issue_comment_event(payload)
 
         return jsonify({'status': 'success'}), 200
 
 
 def handle_issue_comment_event(payload):
+    print(payload)
     if payload['action'] == 'created' and 'comment' in payload:
+        print("payload good")
         comment_text = payload['comment']['body']
         if '@ai-code-reviewer-bot' in comment_text:
+            print("bot tagged")
             repo_name = payload['repository']['full_name']
             issue_number = payload['issue']['number']
             repo = g.get_repo(repo_name)
@@ -68,9 +73,12 @@ def handle_issue_comment_event(payload):
 
 
 def handle_pull_request_event(payload):
+    print(payload)
     if payload['action'] == 'opened' or payload['action'] == 'synchronize':
+        print("payload good")
         comment_body = payload['pull_request']['body']
         if '@ai-code-reviewer-bot' in comment_body:
+            print("bot tagged in pull request")
             repo_name = payload['repository']['full_name']
             pr_number = payload['pull_request']['number']
             repo = g.get_repo(repo_name)
