@@ -33,7 +33,7 @@ class GithubBotApp(BaseModel):
             return jsonify({'status': 'success'}), 200
 
     def run(self):
-        self.app.run(host='0.0.0.0', port=5103)
+        self.app.run(host='0.0.0.0', port=self.port, debug=self.debug_mode)
 
 
 if __name__ == '__main__':
