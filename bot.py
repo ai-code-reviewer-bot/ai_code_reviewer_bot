@@ -68,4 +68,5 @@ if __name__ == '__main__':
         debug_mode=args.debug_mode
     )
     github_bot_app.register_webhook()
+    logger.debug("Staring bot.")
     github_bot_app.run()
