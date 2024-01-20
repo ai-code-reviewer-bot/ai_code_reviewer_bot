@@ -23,9 +23,11 @@ class GithubBotApp(BaseModel):
         arbitrary_types_allowed = True
 
     def register_webhook(self):
+        print("Registering webhook")
         self.flask_app.add_url_rule('/webhook', view_func=self.webhook, methods=['POST'])
 
     def webhook(self):
+        print("webhook triggered")
         if request.method == 'POST':
             payload = request.json
             event = request.headers.get('X-GitHub-Event', None)
