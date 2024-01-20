@@ -35,3 +35,9 @@ def get_installation_access_token(jwt_token, installation_id):
     response = requests.post(url, headers=headers)
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()['token']
+
+
+def get_github_access_token(app_id, private_key_path, installation_id):
+    jwt_token = create_jwt(app_id, private_key_path)
+    access_token = get_installation_access_token(jwt_token, installation_id)
+    return access_token

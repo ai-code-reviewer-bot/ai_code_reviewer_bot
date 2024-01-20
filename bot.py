@@ -1,11 +1,13 @@
-import os
+import argparse
 from typing import Any
 
 from flask import Flask, request, jsonify
-from github import GithubEventHandler
+from github import Github
+
+from github_event_handler import GithubEventHandler
 from pydantic import BaseModel
 
-from auth import create_jwt, get_installation_access_token
+from auth import get_github_access_token
 
 app = Flask(__name__)
 
@@ -35,13 +37,25 @@ class App(BaseModel):
 
 
 if __name__ == '__main__':
-    app_id = os.environ["GITHUB_APP_ID"]
-    installation_id = os.environ["GITHUB_INSTALLATION_ID"]
-    private_key_path = os.environ["GITHUB_PRIVATE_KEY_PATH"]
-    port = int(os.environ["PORT"])
-    debug_mode = bool(int(os.environ["DEBUG"]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--app_id', help='Github App ID')
+    parser.add_argument('--installation_id', help='Github Installation ID')
+    parser.add_argument('--private_key_path', help='Path to Github Private Key')
+    parser.add_argument('--port', type=int, help='Port for the app')
+    parser.add_argument('--debug', type=bool, help='Debug flag')
 
-    jwt_token = create_jwt(app_id, private_key_path)
-    access_token = get_installation_access_token(jwt_token, installation_id)
+    args = parser.parse_args()
 
-    App().run()
+    App(
+        github_handler=GithubEventHandler(
+            github=Github(
+                get_github_access_token(
+                    app_id=args.app_id,
+                    private_key_path=args.private_key_path,
+                    installation_id=args.installation_id
+                )
+            )
+        ),
+        port=args.port,
+        debug_mode=args.debug_mode
+    ).run()
