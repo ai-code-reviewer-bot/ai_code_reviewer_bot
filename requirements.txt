@@ -2,3 +2,4 @@ Flask
 PyGithub
 pyjwt[crypto]
 requests
+pydantic
