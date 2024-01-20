@@ -13,6 +13,7 @@ app = Flask(__name__)
 
 
 class GithubBotApp(BaseModel):
+    flask_app: Flask
     github_handler: GithubEventHandler
     port: int
     debug_mode: bool
@@ -20,10 +21,8 @@ class GithubBotApp(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, **data: Any):
-        super().__init__(**data)
-        self.app = Flask(__name__)
-        self.app.add_url_rule('/webhook', view_func=self.webhook, methods=['POST'])
+    def register_webhook(self):
+        self.flask_app.add_url_rule('/webhook', view_func=self.webhook, methods=['POST'])
 
     def webhook(self):
         if request.method == 'POST':
@@ -33,7 +32,7 @@ class GithubBotApp(BaseModel):
             return jsonify({'status': 'success'}), 200
 
     def run(self):
-        self.app.run(host='0.0.0.0', port=self.port, debug=self.debug_mode)
+        self.flask_app.run(host='0.0.0.0', port=self.port, debug=self.debug_mode)
 
 
 if __name__ == '__main__':
@@ -42,20 +41,28 @@ if __name__ == '__main__':
     parser.add_argument('--installation_id', help='Github Installation ID')
     parser.add_argument('--private_key_path', help='Path to Github Private Key')
     parser.add_argument('--port', type=int, help='Port for the app')
-    parser.add_argument('--debug', type=bool, help='Debug flag')
+    parser.add_argument('--debug_mode', type=bool, help='Debug flag')
 
     args = parser.parse_args()
 
-    GithubBotApp(
-        github_handler=GithubEventHandler(
-            github=Github(
-                get_github_access_token(
-                    app_id=args.app_id,
-                    private_key_path=args.private_key_path,
-                    installation_id=args.installation_id
-                )
-            )
-        ),
+    flask_app = Flask(__name__)
+    github = Github(
+        get_github_access_token(
+            app_id=args.app_id,
+            private_key_path=args.private_key_path,
+            installation_id=args.installation_id
+        )
+    )
+    github_event_handler = GithubEventHandler(
+        github=github,
+        logger=flask_app.logger
+    )
+
+    github_bot_app = GithubBotApp(
+        flask_app=flask_app,
+        github_handler=github_event_handler,
         port=args.port,
         debug_mode=args.debug_mode
-    ).run()
+    )
+    github_bot_app.register_webhook()
+    github_bot_app.run()
