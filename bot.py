@@ -9,7 +9,7 @@ from github_event_handler import GithubEventHandler
 from pydantic import BaseModel
 
 from auth import get_github_access_token
-from reviewer import FakeReviewer
+from reviewer import TestReviewer
 
 
 class GithubBotApp(BaseModel):
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         github=github,
         logger=logger,
         review_trigger="@ai-code-reviewer-bot",
-        reviewer=FakeReviewer()
+        reviewer=TestReviewer()
     )
 
     github_bot_app = GithubBotApp(
