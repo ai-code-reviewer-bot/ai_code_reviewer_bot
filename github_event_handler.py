@@ -46,8 +46,10 @@ class GithubEventHandler(BaseModel):
 
         if self.is_review_requested(payload):
             self.logger.debug("Review requested")
-            pull_request = self.get_pull_request(payload)
-            commit_id = pull_request.head.sha
+            repo_name = payload['repository']['full_name']
+            repo = self.github.get_repo(repo_name)
+            pull_request: PullRequest = self.get_pull_request(payload)
+            commit = repo.get_commit(pull_request.head.sha)
             files = pull_request.get_files()
             for file in files:
                 reviews = self.reviewer.review_file_changes(file.patch)
@@ -55,7 +57,15 @@ class GithubEventHandler(BaseModel):
                     review_line = review.line_number
                     review_text = review.comment
                     try:
-                        pull_request.create_review_comment(review_text, commit_id, file.filename, review_line)
+                        pull_request.create_review_comment(
+                            body=review_text,
+                            commit=commit,
+                            path=file.filename,
+                            line=review_line,
+                            start_side="RIGHT",
+                            subject_type="line",
+                            as_suggestion=True
+                        )
                         self.logger.debug(f"Posted review on {file.filename} at line {review_line}: {review_text}")
                     except Exception as e:
-                        self.logger.error(f"Error posting comment: {e}")
+                        self.logger.error(f"Error posting comment: {str(e)}")
