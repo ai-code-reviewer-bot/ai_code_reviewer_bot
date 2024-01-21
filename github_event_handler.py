@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Dict
 
-from github import Github, PullRequest
+from github import Github, PullRequest, Repository, Commit
 from pydantic import BaseModel
 
 from reviewer import Reviewer
@@ -32,13 +32,26 @@ class GithubEventHandler(BaseModel):
     def extract_pull_request_number(self, pull_request_url: str) -> int:
         return int(pull_request_url.split('/')[-1])
 
-    def get_pull_request(self, payload: Dict) -> PullRequest:
+    def get_repository(self, payload: Dict) -> Repository:
         repo_name = payload['repository']['full_name']
+        repo = self.github.get_repo(repo_name)
+        return repo
+
+    def get_pull_request(self, repository: Repository, payload: Dict) -> PullRequest:
         pull_request_url = payload['issue']['pull_request']['url']
         pull_request_number = self.extract_pull_request_number(pull_request_url)
-        repo = self.github.get_repo(repo_name)
-        pull_request = repo.get_pull(pull_request_number)
+        pull_request = repository.get_pull(pull_request_number)
         return pull_request
+
+    def get_latest_commit(self, repository: Repository, pull_request: PullRequest) -> Commit:
+        commit = repository.get_commit(pull_request.head.sha)
+        return commit
+
+    def add_lines_to_hunk(self, hunk: str) -> str:
+        result = ""
+        for line_number, line in enumerate(hunk):
+            result += f"{line_number}: line\n"
+        return result
 
     def _handle_issue_comment_event(self, payload):
         self.logger.debug("IssueComment")
@@ -46,22 +59,21 @@ class GithubEventHandler(BaseModel):
 
         if self.is_review_requested(payload):
             self.logger.debug("Review requested")
-            repo_name = payload['repository']['full_name']
-            repo = self.github.get_repo(repo_name)
-            pull_request: PullRequest = self.get_pull_request(payload)
-            commit = repo.get_commit(pull_request.head.sha)
+            repository = self.get_repository(payload)
+            pull_request: PullRequest = self.get_pull_request(repository, payload)
+            commit = self.get_latest_commit(repository, pull_request)
             files = pull_request.get_files()
             for file in files:
-                reviews = self.reviewer.review_file_changes(file.patch)
+                hunk_with_line_numbers = self.add_lines_to_hunk(file.patch)
+                reviews = self.reviewer.review_file_changes(hunk_with_line_numbers)
                 for review in reviews:
-                    review_line = review.line_number
-                    review_text = review.comment
                     try:
                         pull_request.create_review_comment(
-                            body=review_text,
-                            commit=commit,
+                            body=review.comment,
+                            commit_id=commit,
                             path=file.filename,
+                            position=review.line_number
                         )
-                        self.logger.debug(f"Posted review on {file.filename} at line {review_line}: {review_text}")
+                        self.logger.debug(f"Posted review on {file.filename}")
                     except Exception as e:
                         self.logger.error(f"Error posting comment: {str(e)}")
