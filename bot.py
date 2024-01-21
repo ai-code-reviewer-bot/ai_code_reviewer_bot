@@ -1,16 +1,14 @@
-import os
-import argparse
 import logging
+import os
 
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from github import Github
 
-from github_event_handler import GithubEventHandler
 from auth import get_github_access_token
+from github_event_handler import GithubEventHandler
 from reviewer import TestReviewer
-
 
 app_id = os.getenv('APP_ID')
 installation_id = os.getenv('INSTALLATION_ID')
