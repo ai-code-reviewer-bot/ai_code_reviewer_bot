@@ -59,7 +59,8 @@ if __name__ == '__main__':
     )
     github_event_handler = GithubEventHandler(
         github=github,
-        logger=logger
+        logger=logger,
+        review_trigger="@ai-code-reviewer-bot"
     )
 
     github_bot_app = GithubBotApp(

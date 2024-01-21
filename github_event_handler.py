@@ -8,6 +8,7 @@ from pydantic import BaseModel
 class GithubEventHandler(BaseModel):
     github: Github
     logger: Logger
+    review_trigger: str
 
     class Config:
         arbitrary_types_allowed = True
@@ -18,7 +19,12 @@ class GithubEventHandler(BaseModel):
             self._handle_issue_comment_event(payload)
 
     def is_review_requested(self, payload: Dict) -> bool:
-        pass
+        comment_belongs_to_pull_request = 'issue' in payload and 'pull_request' in payload['issue']
+        proper_comment = 'comment' in payload and "body" in payload['comment']
+        if comment_belongs_to_pull_request and proper_comment:
+            comment_text = payload['comment']['body']
+            return self.review_trigger in comment_text
+        return False
 
     def get_pull_request(self, payload: Dict) -> PullRequest:
         repo_name = payload['repository']['full_name']
