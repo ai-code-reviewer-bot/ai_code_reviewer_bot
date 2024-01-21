@@ -2,7 +2,6 @@ import json
 import unittest
 from logging import Logger
 from pathlib import Path
-from unittest.mock import MagicMock
 
 from github import Github
 
