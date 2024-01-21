@@ -15,33 +15,28 @@ installation_id = os.getenv('INSTALLATION_ID')
 private_key_path = os.getenv('PRIVATE_KEY_PATH')
 
 
-def create_github_bot() -> Flask:
-    github_bot_app = Flask(__name__)
-    limiter = Limiter(key_func=get_remote_address)
-    logger = github_bot_app.logger
+github_bot_app = Flask(__name__)
+limiter = Limiter(key_func=get_remote_address)
+logger = github_bot_app.logger
 
-    github = Github(
-        get_github_access_token(
-            app_id=app_id, private_key_path=private_key_path, installation_id=installation_id
-        )
+github = Github(
+    get_github_access_token(
+        app_id=app_id, private_key_path=private_key_path, installation_id=installation_id
     )
-    github_event_handler = GithubEventHandler(
-        github=github, logger=logger, review_trigger="@ai-code-reviewer-bot", reviewer=TestReviewer()
-    )
-
-    @github_bot_app.route('/webhook', methods=['POST'])
-    @limiter.limit("10 per minute")
-    def webhook():
-        event = request.headers.get('X-GitHub-Event', None)
-        github_event_handler.handle_event(event, request.json)
-        return jsonify({'status': 'success'}), 200
-
-    return github_bot_app
+)
+github_event_handler = GithubEventHandler(
+    github=github, logger=logger, review_trigger="@ai-code-reviewer-bot", reviewer=TestReviewer()
+)
 
 
-github_bot = create_github_bot()
+@github_bot_app.route('/webhook', methods=['POST'])
+@limiter.limit("10 per minute")
+def webhook():
+    event = request.headers.get('X-GitHub-Event', None)
+    github_event_handler.handle_event(event, request.json)
+    return jsonify({'status': 'success'}), 200
 
 
 if __name__ == '__main__':
-    github_bot.logger.setLevel(logging.DEBUG)
-    github_bot.run(host='0.0.0.0', port=5103, debug=True)
+    github_bot_app.logger.setLevel(logging.DEBUG)
+    github_bot_app.run(host='0.0.0.0', port=5103, debug=True)
