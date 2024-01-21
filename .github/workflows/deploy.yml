@@ -29,3 +29,54 @@ jobs:
     - name: Run tests
       run: |
         python -m unittest
+
+  deploy:
+    name: Deploy to Vultr
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Execute commands over SSH on Vultr VM
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VULTR_VM_HOST }}
+        username: ${{ secrets.VULTR_VM_USERNAME }}
+        key: ${{ secrets.VULTR_VM_SSH_KEY }}
+        password: ${{ secrets.VULTR_VM_PASSWORD }}   # Included password as per your setup
+        script: |
+          sudo ufw allow 5103
+          sudo apt-get update && apt-get upgrade -y
+          sudo apt-get install -y git python3-venv
+          
+          export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          export REPO_DIR=/root/ai_code_reviewer_bot
+          rm -rf $REPO_DIR
+          git clone -b ${{ GITHUB.REF_NAME }} https://github.com/ai-code-reviewer-bot/ai_code_reviewer_bot.git $REPO_DIR
+          cd $REPO_DIR
+          
+          python3 -m venv venv
+          source venv/bin/activate
+          pip3 install -U pip setuptools wheel
+          pip3 install -r requirements.txt
+          
+          systemctl stop ai_code_reviewer_bot_service || true
+          # Create the systemd service
+          echo "[Unit]
+          Description=Gunicorn instance for serving your app
+          After=network.target
+          
+          [Service]
+          User=root
+          WorkingDirectory=/root/ai_code_reviewer_bot
+          Environment=\"OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}\"
+          ExecStart=/root/openai_proxy/venv/bin/gunicorn server:app -w 4 -b 0.0.0.0:5103  --certfile=/etc/letsencrypt/live/rashchenko.xyz/fullchain.pem --keyfile=/etc/letsencrypt/live/rashchenko.xyz/privkey.pem --reuse-port
+          
+          [Install]
+          WantedBy=multi-user.target" | tee /etc/systemd/system/ai_code_reviewer_bot_service.service
+          
+          systemctl daemon-reload
+          systemctl enable ai_code_reviewer_bot_service
+          systemctl start ai_code_reviewer_bot_service
