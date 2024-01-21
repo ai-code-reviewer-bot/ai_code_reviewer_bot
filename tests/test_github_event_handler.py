@@ -2,7 +2,6 @@ import json
 import unittest
 from logging import Logger
 from pathlib import Path
-from unittest.mock import MagicMock
 
 from github import Github
 
@@ -36,4 +35,5 @@ class TestGithubEventHandler(unittest.TestCase):
         )
 
     def test_get_pull_request(self):
-        self.github_event_handler.get_pull_request(self.payload)
+        pull_request = self.github_event_handler.get_pull_request(self.payload)
+        self.assertEqual(pull_request.number, 1)
