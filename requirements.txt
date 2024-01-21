@@ -4,3 +4,4 @@ pyjwt[crypto]
 requests
 pydantic
 Flask-Limiter
+gunicorn
