@@ -26,9 +26,13 @@ class GithubEventHandler(BaseModel):
             return self.review_trigger in comment_text
         return False
 
+    def extract_pull_request_number(self, pull_request_url: str) -> int:
+        return int(pull_request_url.split('/')[-1])
+
     def get_pull_request(self, payload: Dict) -> PullRequest:
         repo_name = payload['repository']['full_name']
-        pull_request_number = payload['pull_request']['number']
+        pull_request_url = payload['issue']['pull_request']['url']
+        pull_request_number = self.extract_pull_request_number(pull_request_url)
         repo = self.github.get_repo(repo_name)
         pull_request = repo.get_pull(pull_request_number)
         return pull_request
