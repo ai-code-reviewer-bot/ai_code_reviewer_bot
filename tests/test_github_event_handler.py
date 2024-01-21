@@ -15,22 +15,21 @@ class TestGithubEventHandler(unittest.TestCase):
         with open(data_path, 'r') as json_file:
             self.payload = json.load(json_file)
 
-        github_magic_mock = MagicMock()
-        github_magic_mock.__class__ = Github
+        github = Github()
         self.github_event_handler = GithubEventHandler(
-            github=github_magic_mock,
+            github=github,
             logger=Logger("test"),
             review_trigger="@ai-code-reviewer-bot"
         )
 
     def test_is_review_requested(self):
-        self.assertFalse(
+        self.assertTrue(
             self.github_event_handler.is_review_requested(
                 self.payload
             )
         )
-        self.payload["comment"]["body"] = "@ai-code-reviewer-bot pls, review"
-        self.assertTrue(
+        self.payload["comment"]["body"] = "just random comment"
+        self.assertFalse(
             self.github_event_handler.is_review_requested(
                 self.payload
             )
