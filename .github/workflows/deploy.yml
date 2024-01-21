@@ -56,7 +56,6 @@ jobs:
           sudo apt-get update && apt-get upgrade -y
           sudo apt-get install -y git python3-venv
           
-          export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           export REPO_DIR=/root/ai_code_reviewer_bot
           rm -rf $REPO_DIR
           git clone -b ${{ GITHUB.REF_NAME }} https://github.com/ai-code-reviewer-bot/ai_code_reviewer_bot.git $REPO_DIR
@@ -76,8 +75,8 @@ jobs:
           [Service]
           User=root
           WorkingDirectory=/root/ai_code_reviewer_bot
-          Environment=\"OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}\"
-          ExecStart=/root/openai_proxy/venv/bin/gunicorn server:app -w 4 -b 0.0.0.0:5103  --certfile=/etc/letsencrypt/live/rashchenko.xyz/fullchain.pem --keyfile=/etc/letsencrypt/live/rashchenko.xyz/privkey.pem --reuse-port
+          Environment=\"OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}\" \"LANGCHAIN_API_KEY=${{ secrets.LANGCHAIN_API_KEY }}\" \"LANGCHAIN_ENDPOINT=${{ secrets.LANGCHAIN_ENDPOINT }}\" \"APP_ID=${{ secrets.APP_ID }}\" \"INSTALLATION_ID=${{ secrets.INSTALLATION_ID }}\" \"PRIVATE_KEY_PATH=${{ secrets.PRIVATE_KEY_PATH }}\"
+          ExecStart=/root/openai_proxy/venv/bin/gunicorn bot:create_app -w 4 -b 0.0.0.0:5103  --certfile=/etc/letsencrypt/live/rashchenko.xyz/fullchain.pem --keyfile=/etc/letsencrypt/live/rashchenko.xyz/privkey.pem --reuse-port
           
           [Install]
           WantedBy=multi-user.target" | tee /etc/systemd/system/ai_code_reviewer_bot_service.service
