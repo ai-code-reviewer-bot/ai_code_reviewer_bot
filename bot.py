@@ -12,7 +12,7 @@ from auth import get_github_access_token
 from reviewer import TestReviewer
 
 
-def create_app() -> Flask:
+def create_github_bot() -> Flask:
     parser = argparse.ArgumentParser()
     parser.add_argument('--app_id', default=os.getenv('APP_ID'), help='Github App ID')
     parser.add_argument('--installation_id', default=os.getenv('INSTALLATION_ID'), help='Github Installation ID')
@@ -44,6 +44,6 @@ def create_app() -> Flask:
 
 
 if __name__ == '__main__':
-    app = create_app()
+    app = create_github_bot()
     app.logger.setLevel(logging.DEBUG)
     app.run(host='0.0.0.0', port=5103, debug=True)
