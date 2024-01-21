@@ -4,11 +4,14 @@ from typing import Dict
 from github import Github, PullRequest
 from pydantic import BaseModel
 
+from reviewer import Reviewer
+
 
 class GithubEventHandler(BaseModel):
     github: Github
     logger: Logger
     review_trigger: str
+    reviewer: Reviewer
 
     class Config:
         arbitrary_types_allowed = True
@@ -44,6 +47,15 @@ class GithubEventHandler(BaseModel):
         if self.is_review_requested(payload):
             self.logger.debug("Review requested")
             pull_request = self.get_pull_request(payload)
+            commit_id = pull_request.head.sha
             files = pull_request.get_files()
             for file in files:
-                self.logger.debug(f"File: {file.filename}, Changes: {file.patch}")
+                reviews = self.reviewer.review_file_changes(file.patch)
+                for review in reviews:
+                    review_line = review.line_number
+                    review_text = review.comment
+                    try:
+                        pull_request.create_review_comment(review_text, commit_id, file.filename, review_line)
+                        self.logger.debug(f"Posted review on {file.filename} at line {review_line}: {review_text}")
+                    except Exception as e:
+                        self.logger.error(f"Error posting comment: {e}")
