@@ -61,10 +61,6 @@ class GithubEventHandler(BaseModel):
                             body=review_text,
                             commit=commit,
                             path=file.filename,
-                            line=review_line,
-                            start_side="RIGHT",
-                            subject_type="line",
-                            as_suggestion=True
                         )
                         self.logger.debug(f"Posted review on {file.filename} at line {review_line}: {review_text}")
                     except Exception as e:
