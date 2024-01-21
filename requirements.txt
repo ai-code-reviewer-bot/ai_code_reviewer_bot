@@ -1,5 +1,5 @@
 Flask
-PyGithub
+PyGithub==1.59.1
 pyjwt[crypto]
 requests
 pydantic
