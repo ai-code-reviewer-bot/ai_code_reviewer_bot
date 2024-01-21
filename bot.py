@@ -43,7 +43,9 @@ def create_github_bot() -> Flask:
     return github_bot_app
 
 
+github_bot = create_github_bot()
+
+
 if __name__ == '__main__':
-    app = create_github_bot()
-    app.logger.setLevel(logging.DEBUG)
-    app.run(host='0.0.0.0', port=5103, debug=True)
+    github_bot.logger.setLevel(logging.DEBUG)
+    github_bot.run(host='0.0.0.0', port=5103, debug=True)
