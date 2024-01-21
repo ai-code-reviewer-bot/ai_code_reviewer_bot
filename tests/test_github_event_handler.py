@@ -6,7 +6,7 @@ from pathlib import Path
 from github import Github
 
 from github_event_handler import GithubEventHandler
-from reviewer import Reviewer
+from reviewer import FakeReviewer
 
 
 class TestGithubEventHandler(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestGithubEventHandler(unittest.TestCase):
             github=github,
             logger=Logger("test"),
             review_trigger="@ai-code-reviewer-bot",
-            reviewer=Reviewer()
+            reviewer=FakeReviewer()
         )
 
     def test_is_review_requested(self):
