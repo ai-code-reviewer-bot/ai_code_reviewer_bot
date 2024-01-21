@@ -3,3 +3,4 @@ PyGithub
 pyjwt[crypto]
 requests
 pydantic
+Flask-Limiter
