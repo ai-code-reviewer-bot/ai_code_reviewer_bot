@@ -21,7 +21,7 @@ class FakeReviewer(Reviewer):
 
 class TestReviewer(Reviewer):
     def review_file_changes(self, file_changes: str) -> List[Review]:
-        return[
+        return [
             Review(
                 line_number=3,
                 comment="test_review"
