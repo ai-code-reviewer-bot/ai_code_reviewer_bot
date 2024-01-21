@@ -22,7 +22,7 @@ def create_github_bot() -> Flask:
 
     github_bot_app = Flask(__name__)
     limiter = Limiter(key_func=get_remote_address)
-    logger = app.logger
+    logger = github_bot_app.logger
 
     github = Github(
         get_github_access_token(
