@@ -2,10 +2,12 @@ import json
 import unittest
 from logging import Logger
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from github import Github
 
 from github_event_handler import GithubEventHandler
+from reviewer import Reviewer
 
 
 class TestGithubEventHandler(unittest.TestCase):
@@ -18,7 +20,8 @@ class TestGithubEventHandler(unittest.TestCase):
         self.github_event_handler = GithubEventHandler(
             github=github,
             logger=Logger("test"),
-            review_trigger="@ai-code-reviewer-bot"
+            review_trigger="@ai-code-reviewer-bot",
+            reviewer=Reviewer()
         )
 
     def test_is_review_requested(self):
