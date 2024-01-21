@@ -12,21 +12,19 @@ from auth import get_github_access_token
 from reviewer import TestReviewer
 
 
+app_id = os.getenv('APP_ID')
+installation_id = os.getenv('INSTALLATION_ID')
+private_key_path = os.getenv('PRIVATE_KEY_PATH')
+
+
 def create_github_bot() -> Flask:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--app_id', default=os.getenv('APP_ID'), help='Github App ID')
-    parser.add_argument('--installation_id', default=os.getenv('INSTALLATION_ID'), help='Github Installation ID')
-    parser.add_argument('--private_key_path', default=os.getenv('PRIVATE_KEY_PATH'), help='Path to Github Private Key')
-
-    args = parser.parse_args()
-
     github_bot_app = Flask(__name__)
     limiter = Limiter(key_func=get_remote_address)
     logger = github_bot_app.logger
 
     github = Github(
         get_github_access_token(
-            app_id=args.app_id, private_key_path=args.private_key_path, installation_id=args.installation_id
+            app_id=app_id, private_key_path=private_key_path, installation_id=installation_id
         )
     )
     github_event_handler = GithubEventHandler(
