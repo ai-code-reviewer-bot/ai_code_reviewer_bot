@@ -37,5 +37,6 @@ class TestGithubEventHandler(unittest.TestCase):
         )
 
     def test_get_pull_request(self):
-        pull_request = self.github_event_handler.get_pull_request(self.payload)
+        repository = self.github_event_handler.get_repository(self.payload)
+        pull_request = self.github_event_handler.get_pull_request(repository, self.payload)
         self.assertEqual(pull_request.number, 1)
